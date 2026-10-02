@@ -226,7 +226,7 @@ export default function Contact() {
             aria-haspopup="dialog"
             onClick={() => setOpen(true)}
           >
-            Inquire
+            Inquire Here!
             <ArrowUpRight size={20} />
           </button>
           <p className="inquire-note">
