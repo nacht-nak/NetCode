@@ -3856,7 +3856,7 @@ svg {
   margin-top: 24px;
   font-size: 1rem;
   line-height: 1.8;
-  color: #031d0f;
+  color: #031d15;
   background: color-mix(in srgb, var(--accent) 2.35%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 8.24%, transparent);
   border-radius: 7px;
