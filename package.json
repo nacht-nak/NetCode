@@ -1,0 +1,32 @@
+{
+  "name": "netcode-website",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "playwright test",
+    "format": "prettier --write src tests *.js *.json index.html README.md",
+    "format:check": "prettier --check src tests *.js *.json index.html README.md"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.8",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.3.0",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@tailwindcss/vite": "^4.1.16",
+    "@vitejs/plugin-react": "^5.0.4",
+    "prettier": "^3.9.9",
+    "tailwindcss": "^4.1.16",
+    "vite": "^7.1.12"
+  }
+}
