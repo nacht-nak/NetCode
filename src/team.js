@@ -13,7 +13,7 @@ export const teamMembers = [
     name: "Bernie Basas, MIT",
     title: "System & Data Analyst",
     photo: "./prof/bern.png",
-    portfolioUrl: "",
+    portfolioUrl: "https://bernie-portfolio.web.app/",
     githubUrl: "",
     accent: "sage",
   },
