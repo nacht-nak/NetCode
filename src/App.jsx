@@ -5,7 +5,7 @@ import Hero from "./components/Hero";
 import Services from "./components/Services";
 import Projects from "./components/Projects";
 import About from "./components/About";
-import Technologies from "./components/Technologies";
+import CompletedWork from "./components/CompletedWork";
 import DevelopmentProcess from "./components/DevelopmentProcess";
 import WhyChooseUs from "./components/WhyChooseUs";
 import Contact from "./components/Contact";
@@ -56,7 +56,7 @@ export default function App() {
           <Services />
           <Projects />
           <About />
-          <Technologies />
+          <CompletedWork />
           <DevelopmentProcess />
           <WhyChooseUs />
           <Contact />

@@ -94,7 +94,7 @@ test("view all projects opens a searchable gallery with details and home navigat
 test("a larger collection stays limited on the homepage and paginates in the gallery", async ({
   page,
 }) => {
-  await page.route("**/src/data.js", async (route) => {
+  await page.route("**/src/data.js*", async (route) => {
     const response = await route.fetch();
     const body = await response.text();
     await route.fulfill({

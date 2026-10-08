@@ -230,7 +230,6 @@ export default function Contact() {
             <ArrowUpRight size={20} />
           </button>
           <p className="inquire-note">
-            <span className="status-dot" />
             Great things begin with a simple hello.
           </p>
         </Reveal>

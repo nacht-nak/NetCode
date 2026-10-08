@@ -1,0 +1,35 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Defines Tailwind CSS theme variables, such as colors and fonts, that generate utility classes.",
+      "references": [
+        {
+          "name": "Tailwind CSS: @theme",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#theme-directive"
+        }
+      ]
+    },
+    {
+      "name": "@apply",
+      "description": "Applies existing Tailwind CSS utility classes, including responsive variants, inside a CSS rule.",
+      "references": [
+        {
+          "name": "Tailwind CSS: @apply",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#apply-directive"
+        }
+      ]
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Defines a custom Tailwind CSS variant, such as the mobile, tablet, compact, laptop, and wide breakpoints in this project.",
+      "references": [
+        {
+          "name": "Tailwind CSS: @custom-variant",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#custom-variant-directive"
+        }
+      ]
+    }
+  ]
+}

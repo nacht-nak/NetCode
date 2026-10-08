@@ -31,7 +31,7 @@ export default function Footer({ homeHref = "" }) {
       title: "Resources",
       links: [
         ["All Projects", "./projects.html"],
-        ["Technologies", `${homeHref}#technologies`],
+        ["Completed Work", `${homeHref}#completed-work`],
         ["Our Process", `${homeHref}#process`],
         ["Why Choose Us", `${homeHref}#why-us`],
       ],

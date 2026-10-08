@@ -19,7 +19,7 @@ function Counter() {
     const start = performance.now();
     const tick = (now) => {
       const progress = Math.min((now - start) / 1100, 1);
-      setValue(Math.floor(10 * (1 - Math.pow(1 - progress, 3))));
+      setValue(Math.floor(4 * (1 - Math.pow(1 - progress, 3))));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);

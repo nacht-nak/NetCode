@@ -1,12 +1,16 @@
 import { expect, test } from "@playwright/test";
+import { projects } from "../src/data.js";
+import { teamMembers } from "../src/team.js";
 
 test.beforeEach(async ({ page }) => {
-  await page.route("https://ptsmpc.vercel.app/**", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: "<html><body><h1>Pageant Tabulation System</h1></body></html>",
-    }),
-  );
+  for (const project of projects.filter((entry) => entry.url)) {
+    await page.route(`${project.url}**`, (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<html><body>Project website preview</body></html>",
+      }),
+    );
+  }
 });
 
 test("layout, navigation, and reduced-motion fallback", async ({
@@ -89,30 +93,37 @@ test("project filters, details, live demo, and keyboard modal dismissal", async 
   await page.goto("/");
   const section = page.locator("#project");
   await section.scrollIntoViewIfNeeded();
-  await expect(section.locator(".project-card")).toHaveCount(4);
-  for (const category of [
-    "Web Development",
-    "Tabulation",
-    "Business",
-    "Other",
-  ]) {
+  const featured = projects
+    .filter((project) => project.featured !== false)
+    .slice(0, 4);
+  await expect(section.locator(".project-card")).toHaveCount(featured.length);
+  for (const category of new Set(featured.map((project) => project.category))) {
     await page.getByRole("button", { name: category, exact: true }).click();
-    await expect(section.locator(".project-card")).toHaveCount(1);
-    await expect(section.locator(".project-category")).toHaveText(category);
+    const matches = featured.filter((project) => project.category === category);
+    await expect(section.locator(".project-card")).toHaveCount(matches.length);
+    await expect(section.locator(".project-category")).toHaveText(
+      matches.map(() => category),
+    );
   }
   await section.getByRole("button", { name: /^All/ }).click();
-  await expect(section.locator(".project-card")).toHaveCount(4);
-  const opener = page.getByRole("button", {
-    name: "View Learnly",
-    exact: true,
-  });
+  await expect(section.locator(".project-card")).toHaveCount(featured.length);
+  const conceptIndex = featured.findIndex((project) => !project.url);
+  expect(conceptIndex).toBeGreaterThanOrEqual(0);
+  const opener = section
+    .locator(".project-card")
+    .nth(conceptIndex)
+    .getByRole("button", {
+      name: `View ${featured[conceptIndex].title}`,
+      exact: true,
+    });
   await opener.click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await page.getByRole("button", { name: "Explore Live Demo" }).click();
+  const firstItem = await dialog.locator(".demo-item h4").first().innerText();
   await page
     .getByRole("textbox", { name: "Search demo collection" })
-    .fill("React");
+    .fill(firstItem);
   await expect(dialog.locator(".demo-item")).toHaveCount(1);
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
@@ -163,7 +174,10 @@ test("form validation, local brief download, and focus trapping", async ({
   await expect(page.getByRole("button", { name: "Send Message" })).toHaveCount(
     0,
   );
-  const inquire = page.getByRole("button", { name: "Inquire", exact: true });
+  const inquire = page.getByRole("button", {
+    name: "Inquire Here!",
+    exact: true,
+  });
   await inquire.click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await expect(page.getByRole("dialog")).toContainText(
@@ -223,13 +237,21 @@ test("team cards open individual portfolios and return focus when dismissed", as
     team.getByRole("heading", { name: "Meet Our Team." }),
   ).toBeInViewport();
   const cards = team.locator(".team-card");
-  await expect(cards).toHaveCount(3);
-  const roles = ["Full Stack Developer", "UI/UX Designer", "Backend Developer"];
-  for (let index = 0; index < roles.length; index++) {
+  await expect(cards).toHaveCount(teamMembers.length);
+  for (let index = 0; index < teamMembers.length; index++) {
     const card = cards.nth(index);
-    const name = `Team member ${String(index + 1).padStart(2, "0")}`;
+    const member = teamMembers[index];
+    const { name, title } = member;
     await expect(card.getByRole("heading", { name })).toBeVisible();
-    await expect(card.getByText(roles[index], { exact: true })).toBeVisible();
+    await expect(card.getByText(title, { exact: true })).toBeVisible();
+    if (member.portfolioUrl?.trim()) {
+      const link = card.getByRole("link", {
+        name: `View portfolio of ${name}`,
+      });
+      await expect(link).toHaveAttribute("href", member.portfolioUrl.trim());
+      await expect(link).toHaveAttribute("target", "_blank");
+      continue;
+    }
     const opener = card.getByRole("button", {
       name: `View portfolio of ${name}`,
     });
@@ -238,9 +260,14 @@ test("team cards open individual portfolios and return focus when dismissed", as
     await expect(
       dialog.getByRole("heading", { name: `${name} — Portfolio` }),
     ).toBeVisible();
-    await expect(dialog.getByText(roles[index], { exact: true })).toBeVisible();
-    await expect(dialog.locator(".portfolio-work-card")).toHaveCount(2);
-    await expect(dialog).toContainText("This is a sample portfolio");
+    await expect(dialog.getByText(title, { exact: true })).toBeVisible();
+    await expect(dialog.locator(".portfolio-work-card")).toHaveCount(
+      projects.filter((project) => member.projectIds?.includes(project.id))
+        .length,
+    );
+    await expect(dialog.locator(".portfolio-preview-note")).toHaveCount(
+      member.isPlaceholder ? 1 : 0,
+    );
     await expect
       .poll(() =>
         page.evaluate(
@@ -257,16 +284,30 @@ test("team cards open individual portfolios and return focus when dismissed", as
     await expect(opener).toBeFocused();
   }
   await team.screenshot({ path: testInfo.outputPath("meet-our-team.png") });
-  await cards
-    .first()
-    .getByRole("button", { name: "View portfolio of Team member 01" })
+  expect(errors).toEqual([]);
+});
+
+test("a team portfolio with project credits links back to featured work", async ({
+  page,
+}) => {
+  await page.route("**/src/team.js*", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      body: `${await response.text()}\nteamMembers[0].portfolioUrl = ''; teamMembers[0].projectIds = ${JSON.stringify([projects[0].id])};`,
+    });
+  });
+  await page.goto("/#team");
+  await page
+    .getByRole("button", { name: `View portfolio of ${teamMembers[0].name}` })
     .click();
   await page
     .getByRole("dialog")
-    .getByRole("link", { name: "Explore Flowdesk in featured projects" })
+    .getByRole("link", {
+      name: `Explore ${projects[0].title} in featured projects`,
+    })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL(/#project$/);
   await expect(page.locator("#project .section-heading h2")).toBeInViewport();
-  expect(errors).toEqual([]);
 });

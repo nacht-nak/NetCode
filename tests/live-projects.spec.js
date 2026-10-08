@@ -22,7 +22,10 @@ test("URL-only projects show live cards, filters, and interactive websites", asy
     .click();
   const card = section.locator(".project-card");
   await expect(card).toHaveCount(1);
-  await expect(card.locator(".concept-label")).toHaveText("LIVE WEBSITE");
+  await expect(card.locator("iframe")).toHaveAttribute(
+    "title",
+    "Pageant Tabulation System website preview",
+  );
   await expect(card.locator("img")).toHaveCount(0);
   await expect(card.locator("iframe")).toHaveAttribute("src", url);
   await expect(card.locator("iframe")).toHaveAttribute("tabindex", "-1");
