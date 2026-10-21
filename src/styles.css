@@ -837,18 +837,6 @@ svg {
   letter-spacing: 1.6px;
   margin-bottom: 21px;
 }
-.section-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 28px;
-  min-width: 32px;
-  border: 1px solid #ffffff20;
-  border-radius: 4px;
-  font: 1rem monospace;
-  color: #92aac1;
-  letter-spacing: 0;
-}
 .section-heading h2 {
   font-size: clamp(2.1875rem, 3.5vw, 3.1875rem);
   line-height: 1.2;
@@ -1858,10 +1846,6 @@ svg {
 }
 .why-section .eyebrow {
   color: var(--accent-soft);
-}
-.why-section .section-number {
-  color: var(--accent);
-  border-color: var(--border);
 }
 .why-section .muted-heading {
   color: var(--muted);

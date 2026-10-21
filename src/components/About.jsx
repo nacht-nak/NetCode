@@ -114,8 +114,6 @@ export default function About() {
           </Reveal>
           <div className="about-copy">
             <SectionHeading
-              number="03"
-              label="THE PEOPLE BEHIND THE CODE"
               title={
                 <>
                   About NetCode<span className="accent-period">.</span>

@@ -43,7 +43,7 @@ export const teamMembers = [
     title: "Web Developer",
     initials: "03",
     photo: "./prof/wel.jpg",
-    portfolioUrl: "",
+    portfolioUrl: "https://wpanogaling.vercel.app/",
     githubUrl: "",
     accent: "sky",
   },

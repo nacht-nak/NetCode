@@ -11,17 +11,23 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
+    "start:prod": "node server/index.js",
+    "mail:verify": "node server/verify-mail.js",
     "test": "playwright test",
-    "format": "prettier --write src tests *.js *.json *.html README.md",
-    "format:check": "prettier --check src tests *.js *.json *.html README.md"
+    "test:server": "node --test server/*.test.js",
+    "format": "prettier --write src shared server tests *.js *.json *.html README.md",
+    "format:check": "prettier --check src shared server tests *.js *.json *.html README.md"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
     "@fontsource/poppins": "^5.3.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.3.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.468.0",
+    "nodemailer": "^10.0.16",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "three": "^0.180.0"

@@ -36,19 +36,9 @@ export function Reveal({ children, className = "", delay = 0, ...props }) {
   );
 }
 
-export function SectionHeading({
-  number,
-  label,
-  title,
-  children,
-  light = false,
-}) {
+export function SectionHeading({ title, children, light = false }) {
   return (
     <Reveal className={`section-heading ${light ? "light-heading" : ""}`}>
-      <div className="eyebrow">
-        <span className="section-number">{number}</span>
-        {label}
-      </div>
       <h2>{title}</h2>
       {children && <p>{children}</p>}
     </Reveal>

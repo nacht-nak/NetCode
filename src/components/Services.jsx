@@ -33,8 +33,6 @@ export default function Services() {
       <div className="container">
         <div className="section-top">
           <SectionHeading
-            number="01"
-            label="WHAT WE DO"
             title={
               <>
                 Our Services<span className="accent-period">.</span>

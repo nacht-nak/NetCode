@@ -24,8 +24,6 @@ export default function DevelopmentProcess() {
       <div className="container">
         <div className="section-top">
           <SectionHeading
-            number="04"
-            label="FROM POSSIBILITY TO PRODUCT"
             title={
               <>
                 How We Build<span className="accent-period">.</span>

@@ -4,3 +4,6 @@ test-results/
 playwright-report/
 .tools/
 *.log
+.env
+.env.*
+!.env.example

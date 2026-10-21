@@ -3,16 +3,15 @@ import { AnimatePresence } from "framer-motion";
 import {
   ArrowUpRight,
   Check,
-  Copy,
   Download,
   Facebook,
   Github,
   LoaderCircle,
-  Mail,
   Linkedin,
   Twitter,
 } from "lucide-react";
 import { siteConfig } from "../config";
+import { projectTypes, validateContact } from "../../shared/contact";
 import { Modal, Reveal, SectionHeading } from "./UI";
 
 export function SocialLinks({ contactHref = "#contact" }) {
@@ -80,18 +79,8 @@ const initialValues = {
   company: "",
   type: "",
   message: "",
+  website: "",
 };
-function validate(values) {
-  const errors = {};
-  if (values.name.trim().length < 2)
-    errors.name = "Please enter your name (at least 2 characters).";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
-    errors.email = "Please enter a valid email address.";
-  if (!values.type) errors.type = "Please select a project type.";
-  if (values.message.trim().length < 20)
-    errors.message = "Tell us a little more (at least 20 characters).";
-  return errors;
-}
 
 export default function Contact() {
   const [open, setOpen] = useState(false);
@@ -99,7 +88,6 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const formRef = useRef(null);
   const controller = useRef(null);
@@ -109,7 +97,7 @@ export default function Contact() {
     setOpen(false);
     setSubmitting(false);
     setResult(null);
-    setCopied(false);
+    setSubmitError("");
   }, []);
   const brief = `NetCode — Project Inquiry\n\nName: ${values.name.trim()}\nEmail: ${values.email.trim()}\nCompany: ${values.company.trim() || "Not provided"}\nProject type: ${values.type}\n\n${values.message.trim()}`;
   const change = (event) => {
@@ -121,21 +109,18 @@ export default function Contact() {
   };
   const submit = async (event) => {
     event.preventDefault();
-    const nextErrors = validate(values);
+    if (submitting) return;
+    const nextErrors = validateContact(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       formRef.current.elements[Object.keys(nextErrors)[0]]?.focus();
-      return;
-    }
-    if (!siteConfig.contactEndpoint) {
-      setResult("brief");
       return;
     }
     setSubmitting(true);
     setSubmitError("");
     const request = new AbortController();
     controller.current = request;
-    const timeout = setTimeout(() => request.abort(), 15000);
+    const timeout = setTimeout(() => request.abort(), 45000);
     try {
       const response = await fetch(siteConfig.contactEndpoint, {
         method: "POST",
@@ -150,18 +135,27 @@ export default function Contact() {
         ),
         signal: request.signal,
       });
-      if (!response.ok) throw new Error("Unable to send");
+      const data = await response.json().catch(() => null);
+      if (!response.ok || data?.ok !== true) {
+        throw new Error(
+          response.status === 429 ? "RATE_LIMITED" : "SEND_FAILED",
+        );
+      }
       if (!request.signal.aborted) {
         setResult("sent");
         setValues(initialValues);
       }
-    } catch {
+    } catch (error) {
       if (
         request.signal.reason !== "dialog-closed" &&
         controller.current === request
       ) {
         setSubmitError(
-          "Your message could not be sent. Please try again, or save a copy of your brief. Your details are still here.",
+          error.message === "RATE_LIMITED"
+            ? "Too many messages. Please try again later. Your details are still here."
+            : request.signal.aborted
+              ? "Sending is taking longer than expected. Your message may still arrive; please wait before retrying. Your details are still here."
+              : "Your message could not be sent. Please try again, or save a copy of your brief. Your details are still here.",
         );
       }
     } finally {
@@ -178,14 +172,6 @@ export default function Contact() {
     anchor.download = "netcode-project-brief.txt";
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(brief);
-      setCopied(true);
-    } catch {
-      download();
-    }
   };
   const fieldProps = (name) => ({
     id: `contact-${name}`,
@@ -206,8 +192,6 @@ export default function Contact() {
       <div className="contact-glow" aria-hidden="true" />
       <div className="container contact-cta">
         <SectionHeading
-          number="06"
-          label="YOUR NEXT CHAPTER STARTS HERE"
           title={
             <>
               Let's Build
@@ -238,11 +222,7 @@ export default function Contact() {
         {open && (
           <Modal
             title={
-              result
-                ? result === "sent"
-                  ? "Thanks for reaching out."
-                  : "Your project brief is ready."
-                : "Tell us about your idea."
+              result ? "Thanks for reaching out." : "Tell us about your idea."
             }
             onClose={close}
             className="inquiry-modal"
@@ -258,6 +238,16 @@ export default function Contact() {
                 <p className="form-intro">
                   A few details are all we need to get started.
                 </p>
+                <div hidden aria-hidden="true">
+                  <label htmlFor="contact-website">
+                    Leave this field empty
+                  </label>
+                  <input
+                    {...fieldProps("website")}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
                 <div className="form-row">
                   <div className="field">
                     <label htmlFor="contact-name">
@@ -279,7 +269,7 @@ export default function Contact() {
                     <input
                       {...fieldProps("email")}
                       type="email"
-                      placeholder="you@company.com"
+                      placeholder="your@email.com"
                       autoComplete="email"
                       required
                       maxLength={254}
@@ -298,6 +288,7 @@ export default function Contact() {
                     autoComplete="organization"
                     maxLength={150}
                   />
+                  {error("company")}
                 </div>
                 <div className="field">
                   <label htmlFor="contact-type">
@@ -307,13 +298,9 @@ export default function Contact() {
                     <option value="" disabled>
                       Select a project type
                     </option>
-                    <option>Web Development</option>
-                    <option>Web Application Development</option>
-                    <option>Custom Software Development</option>
-                    <option>UI/UX Design</option>
-                    <option>System Development</option>
-                    <option>Database Development</option>
-                    <option>Something else</option>
+                    {projectTypes.map((type) => (
+                      <option key={type}>{type}</option>
+                    ))}
                   </select>
                   {error("type")}
                 </div>
@@ -357,9 +344,7 @@ export default function Contact() {
                   )}
                 </button>
                 <p className="form-privacy">
-                  {siteConfig.contactEndpoint
-                    ? "Your details are used only to respond to your inquiry."
-                    : "Your details stay in this browser until you choose to share your brief."}
+                  Your details are used only to respond to your inquiry.
                 </p>
               </form>
             ) : (
@@ -368,44 +353,9 @@ export default function Contact() {
                   <Check size={28} />
                 </div>
                 <p className="modal-description">
-                  {result === "sent"
-                    ? "Your message has been sent. We're looking forward to learning more about your idea."
-                    : "Message delivery is not connected yet, so your details have not been sent. Save your brief to share with NetCode."}
+                  Your message has been sent. We're looking forward to learning
+                  more about your idea.
                 </p>
-                {result === "brief" && (
-                  <>
-                    <div className="brief-summary">
-                      <strong>{values.name}</strong>
-                      <span>{values.type}</span>
-                      <p>{values.message}</p>
-                    </div>
-                    <div className="modal-actions">
-                      <button
-                        className="button button-primary"
-                        onClick={download}
-                      >
-                        Download brief
-                        <Download size={17} />
-                      </button>
-                      <button
-                        className="button button-secondary"
-                        onClick={copy}
-                      >
-                        {copied ? "Copied" : "Copy brief"}
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                      {siteConfig.email && (
-                        <a
-                          className="arrow-link"
-                          href={`mailto:${siteConfig.email}?subject=${encodeURIComponent(`Project inquiry: ${values.type}`)}&body=${encodeURIComponent(brief)}`}
-                        >
-                          Open email draft
-                          <Mail size={16} />
-                        </a>
-                      )}
-                    </div>
-                  </>
-                )}
               </>
             )}
           </Modal>

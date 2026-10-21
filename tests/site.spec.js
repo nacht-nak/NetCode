@@ -166,9 +166,14 @@ test("service details and process keyboard controls", async ({ page }) => {
   );
 });
 
-test("form validation, local brief download, and focus trapping", async ({
+test("form validation, delivery confirmation, and focus trapping", async ({
   page,
 }) => {
+  let submitted;
+  await page.route("**/api/contact", async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({ json: { ok: true } });
+  });
   await page.goto("/");
   await expect(page.locator("#contact input")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Send Message" })).toHaveCount(
@@ -194,7 +199,7 @@ test("form validation, local brief download, and focus trapping", async ({
   await page.getByLabel("Name", { exact: false }).clear();
   await page.getByRole("button", { name: "Send Message" }).click();
   await expect(
-    page.getByText("Please enter your name (at least 2 characters)."),
+    page.getByText("Please enter your name (2–100 characters)."),
   ).toBeVisible();
   await expect(page.getByLabel("Name", { exact: false })).toBeFocused();
   await page.getByLabel("Name", { exact: false }).fill("Jamie Example");
@@ -207,19 +212,21 @@ test("form validation, local brief download, and focus trapping", async ({
     );
   await page.getByRole("button", { name: "Send Message" }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog).toContainText("your details have not been sent");
+  await expect(dialog).toContainText("Your message has been sent.");
+  expect(submitted.email).toBe("jamie@example.com");
+  expect(submitted.website).toBe("");
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await expect(
     page.getByRole("button", { name: "Close dialog" }),
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(page.getByRole("button", { name: "Copy brief" })).toBeFocused();
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download brief" }).click();
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("netcode-project-brief.txt");
+  await expect(
+    page.getByRole("button", { name: "Close dialog" }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(inquire).toBeFocused();
+  await inquire.click();
+  await expect(page.getByLabel("Email", { exact: false })).toHaveValue("");
 });
 
 test("team cards open individual portfolios and return focus when dismissed", async ({

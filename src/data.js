@@ -179,20 +179,6 @@ export const projects = [
   },
 ];
 
-export const technologies = [
-  ["React", "⚛", "var(--accent)"],
-  ["Laravel", "L", "var(--accent-soft)"],
-  ["JavaScript", "JS", "var(--accent)"],
-  ["TypeScript", "TS", "var(--blue-bright)"],
-  ["PHP", "php", "var(--accent-soft)"],
-  ["Python", "Py", "var(--accent)"],
-  ["MySQL", "My", "var(--accent-soft)"],
-  ["HTML", "5", "var(--blue-bright)"],
-  ["CSS", "3", "var(--accent)"],
-  ["Tailwind CSS", "≈", "var(--accent-soft)"],
-  ["Git", "◇", "var(--blue-bright)"],
-  ["GitHub", "GH", "var(--text)"],
-];
 
 export const process = [
   [

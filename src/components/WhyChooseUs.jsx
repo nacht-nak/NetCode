@@ -6,8 +6,6 @@ export default function WhyChooseUs() {
     <section id="why-us" className="section why-section">
       <div className="container">
         <SectionHeading
-          number="05"
-          label="THE NETCODE DIFFERENCE"
           title={
             <>
               Why Choose

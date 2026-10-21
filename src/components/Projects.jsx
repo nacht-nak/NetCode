@@ -229,8 +229,6 @@ export default function Projects({ allProjects = false }) {
         ) : (
           <div className="section-top">
             <SectionHeading
-              number="02"
-              label="SELECTED WORK"
               title={
                 <>
                   Featured Projects<span className="accent-period">.</span>

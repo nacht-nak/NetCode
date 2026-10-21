@@ -18,7 +18,7 @@ npm.cmd install
 npm.cmd start
 ```
 
-`npm start` and `npm run dev` both start the development server. Open the **Local** URL printed in the terminal (normally http://localhost:5173). Stop the server with Ctrl+C. If it is already running, save your changes and refresh the browser.
+`npm start` and `npm run dev` both start the development server and the contact API. Open the **Local** URL printed in the terminal (normally http://localhost:5173). Stop the server with Ctrl+C. Restart after changing environment variables or backend files.
 
 To produce and preview a static production build (use `npm.cmd` in PowerShell):
 
@@ -34,15 +34,50 @@ $env:PATH = (Join-Path (Get-Location) '.tools\node-v22.23.3-win-x64') + ';' + $e
 & '.\.tools\node-v22.23.3-win-x64\npm.cmd' run dev
 ```
 
-## Before publishing
+## Receive contact messages in Gmail
+
+The form posts to `/api/contact`. The Node backend sends an email through Gmail containing the client's name, email, company, project type, and message. Replying to that email addresses the client. No database is needed.
+
+1. Copy `.env.example` to `.env.local` if that file does not exist. In PowerShell: `Copy-Item .env.example .env.local`.
+2. In your Google account, enable **2-Step Verification**, then [create an App Password](https://myaccount.google.com/apppasswords) named `NetCode Website`. Use this generated password, not your normal Gmail login password. See [Google's App Password instructions](https://support.google.com/accounts/answer/185833); some managed or Advanced Protection accounts do not offer app passwords.
+3. Set these **private server settings** in `.env.local`:
+
+   ```dotenv
+   GMAIL_USER=youraddress@gmail.com
+   GMAIL_APP_PASSWORD=your_generated_app_password
+   CONTACT_TO_EMAIL=youraddress@gmail.com
+   ```
+
+   `CONTACT_TO_EMAIL` defaults to `GMAIL_USER` when empty. The Gmail sender can differ from the recipient. Spaces in Google's displayed App Password are stripped automatically. `.env.local` is ignored by Git; never put credentials in a `VITE_*` variable or paste them into chat. `VITE_CONTACT_EMAIL` is an optional public address displayed on the website.
+
+4. Run `npm.cmd run mail:verify` to check Gmail authentication without sending an email, then restart `npm.cmd run dev`.
+5. Submit a real inquiry using **Inquire Here!**, then check the receiving inbox and Spam folder.
+
+Success is shown only after Gmail's SMTP server accepts the message; inbox placement is controlled by Gmail. Missing configuration or delivery errors preserve the draft and offer **Save your brief**. The backend validates input, restricts recipients to the server configuration, rejects a filled bot-trap field, limits JSON to 32 KB, and permits up to five attempts per IP per 15 minutes plus 30 attempts across all visitors per hour. Limits are stored in memory and reset on restart; use a shared rate-limit store when running multiple server instances. This Gmail setup is intended for a low-volume contact form; [Nodemailer's Gmail guide](https://nodemailer.com/usage/using-gmail) covers Google account restrictions and delivery limits.
+
+## Publish the website and backend
+
+Use a host that runs Node.js 22.12 or newer, install dependencies, and configure `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and optionally `CONTACT_TO_EMAIL` as private hosting environment variables. Build and start:
+
+```sh
+npm ci
+npm run build
+npm run start:prod
+```
+
+The production server serves the complete `dist/` website and `/api/contact` together, using `PORT` (default `3000`). Keep `VITE_CONTACT_ENDPOINT=/api/contact`. Set `CONTACT_ALLOWED_ORIGIN` to the public website origin, such as `https://www.example.com`, without a trailing slash. When behind a reverse proxy, set `TRUST_PROXY` to the trusted proxy IPs/subnets documented by your host so per-client rate limits work correctly; leave it empty for direct access. The host must allow outbound Gmail SMTP connections.
+
+If you deploy `dist/` to a separate static host, the Node backend must still run elsewhere. Before building, set `VITE_CONTACT_ENDPOINT=https://your-backend.example/api/contact`; on the backend, set `CONTACT_ALLOWED_ORIGIN` to the exact frontend origin. Uploading `dist/` alone does not provide email delivery. `npm run preview` includes the API for local build checks, but use `start:prod` on your Node host.
+
+## Website configuration
 
 Copy `.env.example` to `.env.local` and provide the company's actual email, GitHub, and Facebook URLs. These are public configuration values. Rebuild after changes.
 
-To enable message delivery, set `VITE_CONTACT_ENDPOINT` to an HTTPS service that accepts JSON POST requests with `name`, `email`, `company`, `type`, and `message`. A 2xx response means the inquiry was accepted. The service must allow your site's origin, validate input, apply spam protection and rate limits, and perform delivery on its server. Never put API secrets in `VITE_*` variables.
+The included contact API accepts JSON POST requests with `name`, `email`, optional `company`, `type`, `message`, and an empty `website` bot-trap field. A successful response is JSON `{ "ok": true }`; a static HTML response never counts as a sent message. Never put API secrets in `VITE_*` variables.
 
 The footer includes Services, Company, and Resources navigation, plus social icons below the divider. Set `VITE_CONTACT_EMAIL`, `VITE_CONTACT_PHONE`, and `VITE_CONTACT_LOCATION` in `.env.local` to show contact details. Optional `VITE_TWITTER_URL` and `VITE_LINKEDIN_URL` add those social profiles alongside GitHub and Facebook. Without contact details, the footer links to the inquiry section.
 
-Without an endpoint, submitting a valid form opens an honest local brief preview with working copy/download actions. Nothing is sent or stored remotely. A configured email also enables a prefilled email draft. Errors preserve the visitor's form data.
+Without Gmail credentials, the website still runs, but the contact API returns an unavailable response. Errors preserve the visitor's form data and allow downloading a copy of the brief.
 
 The completed-work section is an images-only carousel with a continuous sliding animation and no heading, captions, or controls. Medium images repeat seamlessly across the screen. Hovering or focusing the carousel pauses the animation, and it stays idle when offscreen or when the tab is hidden. Reduced motion shows one manually scrollable collection without animation. Put screenshots or photos in `public/work/`, then edit `src/workGallery.js`: set each entry's `image` (for example, `/work/my-project.jpg`) and descriptive `alt` text. Titles serve as alternative text when `alt` is omitted; categories are not displayed. Add or remove entries to change the gallery size. Missing or broken images have an icon fallback. Landscape images around 960 × 600 work best, and images are cropped to fit the cards.
 
@@ -64,11 +99,11 @@ portfolioUrl: "https://yourname.dev",
 
 Their **View Portfolio** link opens that website in a new tab. An empty `portfolioUrl: ""` keeps the built-in portfolio preview.
 
-Contact displays an **Inquire Here!** button. Clicking it opens the validated inquiry form in a dialog. Closing and reopening the dialog preserves the visitor's draft for the current page session. Brief preview and delivery confirmation appear in that same dialog, with Escape-to-close and focus restoration to the Inquire button.
+Contact displays an **Inquire Here!** button. Clicking it opens the validated inquiry form in a dialog. Closing and reopening the dialog preserves the visitor's draft for the current page session. Delivery confirmation appears in that same dialog, with Escape-to-close and focus restoration to the Inquire button.
 
 The **See All Gallery** link at the upper right of the homepage carousel opens `gallery.html`. This page shows every entry from `src/workGallery.js` once in a responsive image grid. Add more entries to that file to expand the collection; both the carousel and full gallery update automatically. **Back to home** returns to the carousel.
 
-Deploy the complete `dist/` directory to any static host after building, including `index.html`, `projects.html`, `gallery.html`, and their shared assets. All three pages use real HTML entry points and need no route rewrites.
+The complete `dist/` directory includes `index.html`, `projects.html`, `gallery.html`, and their shared assets. All three pages use real HTML entry points and need no route rewrites. Follow the backend deployment instructions above to enable contact email delivery.
 
 ## Interaction and accessibility
 
@@ -76,7 +111,7 @@ Deploy the complete `dist/` directory to any static host after building, includi
 - Service detail dialogs and animated portfolio filtering.
 - Project demos with search, empty states, and reversible saved items.
 - An interactive development timeline with arrow, Home, and End key support.
-- Client-side form validation, download/copy fallback, timeout handling, and optional delivery.
+- Client/server form validation, brief-download fallback, timeout handling, and Gmail delivery.
 - Focus-managed dialogs, focus restoration, labeled inputs, visible focus, and a skip link.
 - Reduced motion disables 3D rendering, animation, and smooth scrolling.
 - Mobile and unsupported WebGL environments use a CSS cube fallback. The lazy-loaded 3D scene pauses offscreen and in hidden tabs, uses capped pixel density, and requires no external 3D assets.
@@ -86,8 +121,9 @@ Deploy the complete `dist/` directory to any static host after building, includi
 ```sh
 npx playwright install chromium
 npm test
+npm run test:server
 ```
 
 In PowerShell, use `npx.cmd playwright install chromium` and `npm.cmd test`. This workspace also has browsers in `.tools/browsers`; to reuse them, set `$env:PLAYWRIGHT_BROWSERS_PATH = (Join-Path (Get-Location) '.tools\browsers')` before testing.
 
-Playwright starts a local server automatically and covers desktop, mobile, and reduced-motion layouts; menu and keyboard interactions; filters and demos; modal focus; validation and brief downloads; gallery animation and image fallbacks; and overflow. Screenshots are written into Playwright test artifacts. Run `npm run format:check` to check formatting.
+Playwright starts a local server automatically and covers desktop, mobile, and reduced-motion layouts; menu and keyboard interactions; filters and demos; modal focus; contact success, errors, validation and brief downloads; gallery animation and image fallbacks; and overflow. Contact browser tests intercept delivery requests, and backend tests use a local mail substitute, so automated tests do not send real email. Screenshots are written into Playwright test artifacts. Run `npm run format:check` to check formatting.
