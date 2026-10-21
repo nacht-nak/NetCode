@@ -91,6 +91,8 @@ Projects without a valid `url` keep their optional local `image` and interactive
 
 The About section includes **Meet Our Team**, with a profile image, name, title, and **View Portfolio** button per member. Edit the five profiles in `src/team.js` to update names, photos, roles, bios, skills, project credits, and optional portfolio/GitHub URLs. Use `isPlaceholder: true` for sample profiles. `projectIds` refer to entries in `src/data.js`.
 
+Put profile photos in `public/` and use a root-relative path such as `photo: "/cha.jpg"`. Missing or broken photos display an avatar placeholder in both the team card and portfolio preview.
+
 To link a team member's portfolio website, fill in their `portfolioUrl` in `src/team.js`:
 
 ```js

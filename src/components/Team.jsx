@@ -13,17 +13,21 @@ import { Modal, Reveal } from "./UI";
 import ProjectPreview from "./ProjectPreview";
 
 function ProfileImage({ member, compact = false }) {
+  const source = member.photo?.trim();
+  const [failedSource, setFailedSource] = useState(null);
+
   return (
     <div
       className={`team-profile-image team-${member.accent || "lavender"} ${compact ? "profile-compact" : ""}`}
     >
-      {member.photo ? (
+      {source && failedSource !== source ? (
         <img
-          src={member.photo}
+          src={source}
           alt={member.name}
           width="600"
           height="600"
           loading="lazy"
+          onError={() => setFailedSource(source)}
         />
       ) : (
         <div
