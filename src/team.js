@@ -22,7 +22,7 @@ export const teamMembers = [
     title: "UI/UX Design/System Analyst",
     initials: "03",
     photo: "/mike.png",
-    portfolioUrl: "",
+    portfolioUrl: "https://mikechristiangealolo.vercel.app/",
     githubUrl: "",
     accent: "sky",
   },
